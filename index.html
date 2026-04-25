@@ -2,43 +2,53 @@
 <html>
 <head>
     <style>
-        body { background-color: #000; color: #00ffff; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 20px; }
-        .member-card { background: rgba(0, 255, 255, 0.1); border: 1px solid #00ffff; margin: 10px 0; padding: 10px; border-radius: 5px; box-shadow: 0 0 10px #00ffff; }
-        #loading { font-size: 14px; letter-spacing: 2px; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        body { background-color: #000; color: #00ffff; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 10px; overflow: hidden; }
+        .member-card { background: rgba(0, 255, 255, 0.1); border: 1px solid #00ffff; margin: 8px 0; padding: 10px; border-radius: 5px; box-shadow: 0 0 8px #00ffff; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        #status { font-size: 10px; margin-bottom: 10px; color: #6600ff; letter-spacing: 2px; }
     </style>
 </head>
 <body>
-    <div id="display-area">
-        <div id="loading">SCANNING CHESS.COM DATABASE...</div>
-    </div>
+    <div id="status">SYNCING SHADOW DATABASE...</div>
+    <div id="display-area"></div>
+
     <script>
         async function fetchMembers() {
             const urlParams = new URLSearchParams(window.location.search);
             const clubSlug = urlParams.get('club') || 'shadow-fianchetto';
             const apiURL = `https://api.chess.com/pub/club/${clubSlug}/members`;
+
             try {
                 const response = await fetch(apiURL);
                 const data = await response.json();
-                const newcomers = data.weekly || [];
+                
+                // This combines every member list into one big group
+                const allMembers = [
+                    ...(data.weekly || []), 
+                    ...(data.monthly || []), 
+                    ...(data.all_time || [])
+                ];
+
                 const displayArea = document.getElementById('display-area');
                 displayArea.innerHTML = '';
-                if (newcomers.length === 0) {
-                    displayArea.innerHTML = '<div>NO NEW ROYALS FOUND</div>';
+
+                if (allMembers.length === 0) {
+                    displayArea.innerHTML = '<div class="member-card">NO MEMBERS FOUND</div>';
                     return;
                 }
-                newcomers.slice(0, 5).forEach(member => {
+
+                // Show the first 6 members found
+                allMembers.slice(0, 6).forEach(member => {
                     const card = document.createElement('div');
                     card.className = 'member-card';
-                    card.innerHTML = `<strong>${member.username}</strong>`;
+                    card.innerText = member.username;
                     displayArea.appendChild(card);
                 });
+                document.getElementById('status').innerText = "CONNECTION STABLE";
             } catch (error) {
-                document.getElementById('display-area').innerHTML = 'CONNECTION ERROR';
+                document.getElementById('display-area').innerHTML = '<div class="member-card">OFFLINE</div>';
             }
         }
         fetchMembers();
     </script>
 </body>
 </html>
-

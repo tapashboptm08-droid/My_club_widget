@@ -3,12 +3,12 @@
 <head>
     <style>
         body { background-color: #000; color: #00ffff; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 10px; overflow: hidden; }
-        .member-card { background: rgba(0, 255, 255, 0.1); border: 1px solid #00ffff; margin: 8px 0; padding: 10px; border-radius: 5px; box-shadow: 0 0 8px #00ffff; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-        #status { font-size: 10px; margin-bottom: 10px; color: #6600ff; letter-spacing: 2px; }
+        .member-card { background: rgba(0, 255, 255, 0.1); border: 1px solid #00ffff; margin: 10px 0; padding: 12px; border-radius: 5px; box-shadow: 0 0 10px #00ffff; font-size: 15px; font-weight: bold; text-transform: uppercase; border-left: 5px solid #6600ff; }
+        .title { font-size: 10px; color: #6600ff; letter-spacing: 3px; margin-bottom: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="status">SYNCING SHADOW DATABASE...</div>
+    <div class="title">NEWEST RECRUITS</div>
     <div id="display-area"></div>
 
     <script>
@@ -21,29 +21,30 @@
                 const response = await fetch(apiURL);
                 const data = await response.json();
                 
-                // This combines every member list into one big group
-                const allMembers = [
-                    ...(data.weekly || []), 
-                    ...(data.monthly || []), 
-                    ...(data.all_time || [])
-                ];
+                // Grab the 'all_time' list which contains all 237 members
+                let members = data.all_time || [];
 
                 const displayArea = document.getElementById('display-area');
                 displayArea.innerHTML = '';
 
-                if (allMembers.length === 0) {
-                    displayArea.innerHTML = '<div class="member-card">NO MEMBERS FOUND</div>';
+                if (members.length === 0) {
+                    displayArea.innerHTML = '<div class="member-card">SCANNING...</div>';
                     return;
                 }
 
-                // Show the first 6 members found
-                allMembers.slice(0, 6).forEach(member => {
+                /* THE TRICK: 
+                   The API puts newer members at the END of the 'all_time' list.
+                   We 'reverse' the list to bring the newest members to the top.
+                */
+                const newestFirst = members.reverse();
+
+                // Take only the top 3
+                newestFirst.slice(0, 3).forEach(member => {
                     const card = document.createElement('div');
                     card.className = 'member-card';
                     card.innerText = member.username;
                     displayArea.appendChild(card);
                 });
-                document.getElementById('status').innerText = "CONNECTION STABLE";
             } catch (error) {
                 document.getElementById('display-area').innerHTML = '<div class="member-card">OFFLINE</div>';
             }

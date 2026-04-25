@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { background-color: #000; color: #00ffff; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 20px; }
+        .member-card { background: rgba(0, 255, 255, 0.1); border: 1px solid #00ffff; margin: 10px 0; padding: 10px; border-radius: 5px; box-shadow: 0 0 10px #00ffff; }
+        #loading { font-size: 14px; letter-spacing: 2px; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="display-area">
+        <div id="loading">SCANNING CHESS.COM DATABASE...</div>
+    </div>
+    <script>
+        async function fetchMembers() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const clubSlug = urlParams.get('club') || 'shadow-fianchetto';
+            const apiURL = `https://api.chess.com/pub/club/${clubSlug}/members`;
+            try {
+                const response = await fetch(apiURL);
+                const data = await response.json();
+                const newcomers = data.weekly || [];
+                const displayArea = document.getElementById('display-area');
+                displayArea.innerHTML = '';
+                if (newcomers.length === 0) {
+                    displayArea.innerHTML = '<div>NO NEW ROYALS FOUND</div>';
+                    return;
+                }
+                newcomers.slice(0, 5).forEach(member => {
+                    const card = document.createElement('div');
+                    card.className = 'member-card';
+                    card.innerHTML = `<strong>${member.username}</strong>`;
+                    displayArea.appendChild(card);
+                });
+            } catch (error) {
+                document.getElementById('display-area').innerHTML = 'CONNECTION ERROR';
+            }
+        }
+        fetchMembers();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            background-color: transparent;
+            color: #00ffff;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin: 0;
+            padding: 10px;
+            overflow: hidden;
+        }
+        .member-card {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #00ffff;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: glow 1.5s infinite alternate;
+        }
+        @keyframes glow {
+            from { box-shadow: 0 0 2px #00ffff; }
+            to { box-shadow: 0 0 8px #00ffff; }
+        }
+        .username { font-weight: bold; font-size: 14px; }
+        #loading { font-size: 12px; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+    <div id="display-area">
+        <div id="loading">SCANNING CHESS.COM DATABASE...</div>
+    </div>
+
+    <script>
+        // This is the mechanism that talks to the Chess.com API
+        async function fetchMembers() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const clubSlug = urlParams.get('club') || 'shadow-fianchetto';
+            const apiURL = `https://api.chess.com/pub/club/${clubSlug}/members`;
+
+            try {
+                const response = await fetch(apiURL);
+                const data = await response.json();
+                
+                // We take the "weekly" members (the newest ones)
+                const newcomers = data.weekly || [];
+                const displayArea = document.getElementById('display-area');
+                displayArea.innerHTML = '';
+
+                if (newcomers.length === 0) {
+                    displayArea.innerHTML = '<div>NO NEW ROYALS FOUND</div>';
+                    return;
+                }
+
+                // Show the top 5 newest members
+                newcomers.slice(0, 5).forEach(member => {
+                    const card = document.createElement('div');
+                    card.className = 'member-card';
+                    card.innerHTML = `<span class="username">${member.username}</span>`;
+                    displayArea.appendChild(card);
+                });
+            } catch (error) {
+                document.getElementById('display-area').innerHTML = 'CONNECTION ERROR';
+            }
+        }
+
+        fetchMembers();
+    </script>
+</body>
+</html>
+
